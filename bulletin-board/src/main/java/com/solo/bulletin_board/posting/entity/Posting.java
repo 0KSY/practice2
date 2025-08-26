@@ -1,5 +1,6 @@
 package com.solo.bulletin_board.posting.entity;
 
+import com.solo.bulletin_board.comment.entity.Comment;
 import com.solo.bulletin_board.member.entity.Member;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -8,6 +9,8 @@ import org.mapstruct.ap.internal.model.GeneratedType;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -30,6 +33,9 @@ public class Posting {
     @ManyToOne
     @JoinColumn(name = "MEMBER_ID")
     private Member member;
+
+    @OneToMany(mappedBy = "posting", cascade = CascadeType.REMOVE)
+    private List<Comment> comments = new ArrayList<>();
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
