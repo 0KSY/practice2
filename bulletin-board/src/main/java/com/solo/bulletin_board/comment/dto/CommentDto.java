@@ -1,6 +1,5 @@
-package com.solo.bulletin_board.posting.dto;
+package com.solo.bulletin_board.comment.dto;
 
-import com.solo.bulletin_board.comment.dto.CommentDto;
 import com.solo.bulletin_board.member.dto.MemberDto;
 import lombok.Builder;
 import lombok.Getter;
@@ -11,24 +10,26 @@ import javax.validation.constraints.Positive;
 import java.time.LocalDateTime;
 import java.util.List;
 
-public class PostingDto {
+public class CommentDto {
 
     @Getter
     @Setter
     public static class Post{
-        @NotBlank
-        private String title;
+
         @NotBlank
         private String content;
         @Positive
         private long memberId;
+        @Positive
+        private long postingId;
+        private long parentCommentId;
+
     }
 
     @Getter
     @Setter
     public static class Patch{
-        private long postingId;
-        private String title;
+        private long commentId;
         private String content;
     }
 
@@ -36,26 +37,36 @@ public class PostingDto {
     @Setter
     @Builder
     public static class Response{
+        private long commentId;
         private long postingId;
-        private String title;
         private String content;
-        private int viewCount;
         private LocalDateTime createdAt;
         private LocalDateTime modifiedAt;
         private MemberDto.MemberResponse memberResponse;
-        private List<CommentDto.ParentCommentResponse> parentCommentResponses;
     }
 
     @Getter
     @Setter
     @Builder
-    public static class PostingInfoResponse{
-        private long postingId;
-        private String title;
-        private int viewCount;
-        private int commentCount;
+    public static class ChildCommentResponse{
+        private long commentId;
+        private long parentCommentId;
+        private String content;
         private LocalDateTime createdAt;
         private LocalDateTime modifiedAt;
         private MemberDto.MemberResponse memberResponse;
+
+    }
+
+    @Getter
+    @Setter
+    @Builder
+    public static class ParentCommentResponse{
+        private long commentId;
+        private String content;
+        private LocalDateTime createdAt;
+        private LocalDateTime modifiedAt;
+        private MemberDto.MemberResponse memberResponse;
+        private List<ChildCommentResponse> childCommentResponses;
     }
 }
