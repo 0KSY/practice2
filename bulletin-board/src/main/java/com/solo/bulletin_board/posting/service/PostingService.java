@@ -6,6 +6,10 @@ import com.solo.bulletin_board.member.entity.Member;
 import com.solo.bulletin_board.member.service.MemberService;
 import com.solo.bulletin_board.posting.entity.Posting;
 import com.solo.bulletin_board.posting.repository.PostingRepository;
+import com.solo.bulletin_board.postingTag.entity.PostingTag;
+import com.solo.bulletin_board.postingTag.repository.PostingTagRepository;
+import com.solo.bulletin_board.tag.entity.Tag;
+import com.solo.bulletin_board.tag.repository.TagRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -13,7 +17,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -21,10 +27,15 @@ public class PostingService {
 
     private final PostingRepository postingRepository;
     private final MemberService memberService;
+    private final TagRepository tagRepository;
+    private final PostingTagRepository postingTagRepository;
 
-    public PostingService(PostingRepository postingRepository, MemberService memberService) {
+    public PostingService(PostingRepository postingRepository, MemberService memberService,
+                          TagRepository tagRepository, PostingTagRepository postingTagRepository) {
         this.postingRepository = postingRepository;
         this.memberService = memberService;
+        this.tagRepository = tagRepository;
+        this.postingTagRepository = postingTagRepository;
     }
 
     public Posting findVerifiedPosting(long postingId){
@@ -42,6 +53,22 @@ public class PostingService {
         Member findMember = memberService.findVerifiedMember(posting.getMember().getMemberId());
         posting.setMember(findMember);
 
+        if(!posting.getPostingTags().isEmpty()){
+
+            for(PostingTag postingTag : posting.getPostingTags()){
+                Optional<Tag> optionalTag = tagRepository.findByTagName(postingTag.getTag().getTagName());
+
+                if(optionalTag.isPresent()){
+                    postingTag.setTag(optionalTag.get());
+                }
+                else{
+                    Tag savedTag = tagRepository.save(postingTag.getTag());
+                    postingTag.setTag(savedTag);
+                }
+            }
+        }
+
+
         return postingRepository.save(posting);
 
     }
@@ -54,6 +81,34 @@ public class PostingService {
                 .ifPresent(title -> findPosting.setTitle(title));
         Optional.ofNullable(posting.getContent())
                 .ifPresent(content -> findPosting.setContent(content));
+
+        if(!posting.getPostingTags().isEmpty()){
+            postingTagRepository.deleteAll(findPosting.getPostingTags());
+            findPosting.getPostingTags().clear();
+
+            List<PostingTag> postingTags = posting.getPostingTags().stream()
+                    .map(postingTag -> {
+
+                        Optional<Tag> optionalTag = tagRepository.findByTagName(postingTag.getTag().getTagName());
+
+                        if(optionalTag.isPresent()){
+                            postingTag.setTag(optionalTag.get());
+                        }
+                        else{
+                            Tag savedTag = tagRepository.save(postingTag.getTag());
+                            postingTag.setTag(savedTag);
+                        }
+
+                        postingTag.setPosting(findPosting);
+
+                        return postingTag;
+
+                    }).collect(Collectors.toList());
+
+            findPosting.setPostingTags(postingTags);
+
+        }
+
 
         findPosting.setModifiedAt(LocalDateTime.now());
 
