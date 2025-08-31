@@ -17,7 +17,7 @@ public class CustomAuthorityUtils {
     private final List<String> ADMIN_ROLE = List.of("ADMIN", "USER");
     private final List<String> USER_ROLE = List.of("USER");
 
-    private List<String> createRoles(String email){
+    public List<String> createRoles(String email){
         if(email.equals(adminMailAddress)){
             return ADMIN_ROLE;
         }
