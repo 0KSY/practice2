@@ -1,5 +1,6 @@
 package com.solo.bulletin_board.member.service;
 
+import com.solo.bulletin_board.auth.userDetailsService.CustomUserDetails;
 import com.solo.bulletin_board.auth.utils.CustomAuthorityUtils;
 import com.solo.bulletin_board.exception.BusinessLogicException;
 import com.solo.bulletin_board.exception.ExceptionCode;
@@ -55,6 +56,13 @@ public class MemberService {
 
     }
 
+    public void checkMemberId(long memberId, CustomUserDetails customUserDetails){
+
+        if(memberId != customUserDetails.getMemberId()){
+            throw new BusinessLogicException(ExceptionCode.MEMBER_NOT_MATCHED);
+        }
+    }
+
     public Member createMember(Member member){
 
         verifyExistsEmail(member.getEmail());
@@ -70,9 +78,9 @@ public class MemberService {
 
     }
 
-    public Member updateMember(Member member){
+    public Member updateMember(Member member, CustomUserDetails customUserDetails){
 
-        Member findMember = findVerifiedMember(member.getMemberId());
+        Member findMember = findVerifiedMember(customUserDetails.getMemberId());
 
         Optional.ofNullable(member.getNickname())
                 .ifPresent(nickname -> {
@@ -86,14 +94,19 @@ public class MemberService {
 
     }
 
-    public Member findMember(long memberId){
+    public Member findMember(CustomUserDetails customUserDetails){
 
-        return findVerifiedMember(memberId);
+        return findVerifiedMember(customUserDetails.getMemberId());
     }
 
-    public void deleteMember(long memberId){
+    public void deleteMember(String password, CustomUserDetails customUserDetails){
 
-        Member findMember = findVerifiedMember(memberId);
+        Member findMember = findVerifiedMember(customUserDetails.getMemberId());
+
+        if(!passwordEncoder.matches(password, findMember.getPassword())){
+            throw new BusinessLogicException(ExceptionCode.MEMBER_PASSWORD_NOT_MATCHED);
+        }
+
         memberRepository.delete(findMember);
     }
 

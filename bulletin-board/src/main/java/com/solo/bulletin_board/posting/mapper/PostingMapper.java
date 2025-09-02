@@ -18,13 +18,9 @@ public interface PostingMapper {
 
     default Posting postingPostDtoToPosting(PostingDto.Post postingPostDto){
 
-        Member member = new Member();
-        member.setMemberId(postingPostDto.getMemberId());
-
         Posting posting = new Posting();
         posting.setTitle(postingPostDto.getTitle());
         posting.setContent(posting.getContent());
-        posting.setMember(member);
 
         if(postingPostDto.getPostingTagDtos() != null){
             List<PostingTag> postingTags = postingPostDto.getPostingTagDtos().stream()
